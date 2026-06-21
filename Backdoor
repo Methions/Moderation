@@ -176,5 +176,3 @@ end
 
 _G.LALOLExecute = ExecuteBackdoor
 _G.LALOLBackdoor = backdoor
-
-notify('LALOL Backdoor Scanner loaded! Auto-scanning...')
