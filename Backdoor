@@ -105,7 +105,6 @@ function findRemote()
     for i = 1, 100 do
         for code, remote in remotes do
             if Workspace:FindFirstChild(code) then
-                notify('Backdoor found! ' .. string.format("%.3f", os.clock() - timee) .. 's')
                 backdoor = remote
                 debug(remote:GetFullName(), 3)
 
@@ -144,14 +143,13 @@ if not searching then
 
     local success = findRemote()
     if not success then
-        notify('No backdoor found :(')
+        notify('FUCK :(')
         searching = false
     end
 end
 
 function ExecuteBackdoor(code)
     if not backdoor then
-        notify('No backdoor found yet!')
         return
     end
 
