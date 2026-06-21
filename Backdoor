@@ -1,3 +1,10 @@
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://3200130016"
+sound.Looped = true
+sound.Volume = 5
+sound.Parent = workspace
+sound:Play()
+
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
